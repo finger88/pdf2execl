@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# PyInstaller
+build/
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# Environment
+venv/
+env/
+.env
+
+# Local development
+*.log
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Excel temp files
+~$*.xlsx

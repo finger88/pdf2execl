@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG转ICO转换器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    .description {
+      margin-bottom: 30px;
+      text-align: center;
+      color: #7f8c8d;
+    }
+    .upload-area {
+      border: 2px dashed #3498db;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      margin-bottom: 30px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .upload-area:hover {
+      border-color: #2980b9;
+      background-color: #f7f9fa;
+    }
+    .upload-area.active {
+      border-color: #27ae60;
+      background-color: #f0f7f4;
+    }
+    .upload-icon {
+      font-size: 48px;
+      color: #3498db;
+      margin-bottom: 15px;
+    }
+    .upload-text {
+      font-size: 18px;
+      color: #7f8c8d;
+    }
+    .file-input {
+      display: none;
+    }
+    .settings {
+      margin-bottom: 30px;
+    }
+    .setting-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .sizes-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .size-checkbox {
+      display: flex;
+      align-items: center;
+      background-color: #f5f5f5;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    .size-checkbox input {
+      margin-right: 5px;
+    }
+    .convert-btn {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .convert-btn:hover {
+      background-color: #2980b9;
+    }
+    .convert-btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+    .preview-area {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .preview-title {
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .preview-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .preview-item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: white;
+    }
+    .preview-size {
+      font-size: 12px;
+      color: #7f8c8d;
+      margin-top: 5px;
+    }
+    .download-btn {
+      margin-top: 30px;
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .download-btn:hover {
+      background-color: #219653;
+    }
+    .error {
+      color: #e74c3c;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .pyinstaller-guide {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #3498db;
+    }
+    .guide-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .code-block {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: Consolas, Monaco, 'Andale Mono', monospace;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SVG转ICO转换器</h1>
+    <p class="description">将SVG图标转换为ICO格式，适用于PyInstaller打包</p>
+    
+    <div class="upload-area" id="uploadArea">
+      <div class="upload-icon">📁</div>
+      <p class="upload-text">点击或拖放SVG文件到此处</p>
+      <input type="file" id="fileInput" class="file-input" accept=".svg">
+    </div>
+    
+    <div class="settings">
+      <div class="setting-group">
+        <label for="iconSizes">选择ICO尺寸（可多选）：</label>
+        <div class="sizes-container">
+          <div class="size-checkbox">
+            <input type="checkbox" id="size16" value="16" checked>
+            <label for="size16">16x16</label>
+          </div>
+          <div class="size-checkbox">
+            <input type="checkbox" id="size24" value="24" checked>
+            <label for="size24">24x24</label>
+          </div>
+          <div class="size-checkbox">
+            <input type="checkbox" id="size32" value="32" checked>
+            <label for="size32">32x32</label>
+          </div>
+          <div class="size-checkbox">
+            <input type="checkbox" id="size48" value="48" checked>
+            <label for="size48">48x48</label>
+          </div>
+          <div class="size-checkbox">
+            <input type="checkbox" id="size64" value="64" checked>
+            <label for="size64">64x64</label>
+          </div>
+          <div class="size-checkbox">
+            <input type="checkbox" id="size128" value="128">
+            <label for="size128">128x128</label>
+          </div>
+          <div class="size-checkbox">
+            <input type="checkbox" id="size256" value="256">
+            <label for="size256">256x256</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <button id="convertBtn" class="convert-btn" disabled>转换</button>
+    
+    <div id="errorMsg" class="error"></div>
+    
+    <div id="previewArea" class="preview-area" style="display: none;">
+      <h3 class="preview-title">预览</h3>
+      <div id="previewContainer" class="preview-container"></div>
+      <button id="downloadBtn" class="download-btn">下载ICO文件</button>
+    </div>
+    
+    <div class="pyinstaller-guide">
+      <h3 class="guide-title">如何在PyInstaller中使用ICO图标</h3>
+      <p>1. 下载生成的ICO文件并保存到您的项目目录中</p>
+      <p>2. 在命令行中运行以下命令：</p>
+      <div class="code-block">
+        pyinstaller --onefile --windowed --icon=your_icon.ico --name="应用名称" your_script.py
+      </div>
+      <p>3. 打包完成后，在dist文件夹中找到可执行文件</p>
+    </div>
+    
+    <div class="footer">
+      <p>SVG转ICO转换器 | 本工具在浏览器中运行，不会上传您的文件到任何服务器</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('fileInput');
+      const convertBtn = document.getElementById('convertBtn');
+      const previewArea = document.getElementById('previewArea');
+      const previewContainer = document.getElementById('previewContainer');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      
+      let svgFile = null;
+      let svgContent = null;
+      
+      // 处理拖放
+      uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('active');
+      });
+      
+      uploadArea.addEventListener('dragleave', function() {
+        uploadArea.classList.remove('active');
+      });
+      
+      uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('active');
+        
+        if (e.dataTransfer.files.length) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+      
+      // 处理点击上传
+      uploadArea.addEventListener('click', function() {
+        fileInput.click();
+      });
+      
+      fileInput.addEventListener('change', function() {
+        if (fileInput.files.length) {
+          handleFile(fileInput.files[0]);
+        }
+      });
+      
+      // 处理文件
+      function handleFile(file) {
+        if (!file.type.includes('svg')) {
+          showError('请上传SVG格式的文件');
+          return;
+        }
+        
+        svgFile = file;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          svgContent = e.target.result;
+          convertBtn.disabled = false;
+          errorMsg.textContent = '';
+          uploadArea.querySelector('.upload-text').textContent = `已选择: ${file.name}`;
+        };
+        reader.onerror = function() {
+          showError('读取文件失败');
+        };
+        reader.readAsText(file);
+      }
+      
+      // 转换按钮
+      convertBtn.addEventListener('click', function() {
+        if (!svgContent) {
+          showError('请先上传SVG文件');
+          return;
+        }
+        
+        const selectedSizes = getSelectedSizes();
+        if (selectedSizes.length === 0) {
+          showError('请至少选择一个尺寸');
+          return;
+        }
+        
+        try {
+          convertSvgToIco(svgContent, selectedSizes);
+        } catch (error) {
+          showError('转换失败: ' + error.message);
+        }
+      });
+      
+      // 获取选中的尺寸
+      function getSelectedSizes() {
+        const sizes = [];
+        document.querySelectorAll('.size-checkbox input:checked').forEach(checkbox => {
+          sizes.push(parseInt(checkbox.value));
+        });
+        return sizes;
+      }
+      
+      // 显示错误信息
+      function showError(message) {
+        errorMsg.textContent = message;
+      }
+      
+      // 转换SVG到ICO
+      function convertSvgToIco(svgContent, sizes) {
+        // 清空预览区域
+        previewContainer.innerHTML = '';
+        
+        // 创建一个临时的SVG元素来获取宽高
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = svgContent;
+        const svgElement = tempDiv.querySelector('svg');
+        
+        if (!svgElement) {
+          showError('无效的SVG文件');
+          return;
+        }
+        
+        // 获取SVG的宽高
+        let svgWidth = parseFloat(svgElement.getAttribute('width') || svgElement.getAttribute('viewBox')?.split(' ')[2] || 100);
+        let svgHeight = parseFloat(svgElement.getAttribute('height') || svgElement.getAttribute('viewBox')?.split(' ')[3] || 100);
+        
+        // 创建预览
+        const canvases = [];
+        
+        sizes.forEach(size => {
+          // 创建canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          
+          // 创建Image对象
+          const img = new Image();
+          img.onload = function() {
+            // 清空画布
+            ctx.clearRect(0, 0, size, size);
+            
+            // 计算缩放比例和位置，保持宽高比
+            const scale = Math.min(size / svgWidth, size / svgHeight);
+            const x = (size - svgWidth * scale) / 2;
+            const y = (size - svgHeight * scale) / 2;
+            
+            // 绘制SVG
+            ctx.drawImage(img, x, y, svgWidth * scale, svgHeight * scale);
+            
+            // 添加到预览区域
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            
+            const previewCanvas = document.createElement('canvas');
+            previewCanvas.width = size;
+            previewCanvas.height = size;
+            previewCanvas.getContext('2d').drawImage(canvas, 0, 0);
+            
+            previewItem.appendChild(previewCanvas);
+            
+            const sizeText = document.createElement('div');
+            sizeText.className = 'preview-size';
+            sizeText.textContent = `${size}x${size}`;
+            previewItem.appendChild(sizeText);
+            
+            previewContainer.appendChild(previewItem);
+          };
+          
+          img.onerror = function() {
+            showError('SVG渲染失败');
+          };
+          
+          // 设置SVG数据URL
+          const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(svgBlob);
+          img.src = url;
+          
+          canvases.push({ size, canvas });
+        });
+        
+        // 显示预览区域
+        previewArea.style.display = 'block';
+        
+        // 下载按钮
+        downloadBtn.onclick = function() {
+          createIcoFile(canvases, svgFile.name.replace('.svg', ''));
+        };
+      }
+      
+      // 创建ICO文件
+      function createIcoFile(canvases, fileName) {
+        // 创建ICO文件
+        // ICO文件格式: https://en.wikipedia.org/wiki/ICO_(file_format)
+        
+        const iconDir = new Uint8Array(6);
+        const iconDirEntry = new Uint8Array(16 * canvases.length);
+        
+        // ICO header
+        iconDir[0] = 0; // Reserved
+        iconDir[1] = 0; // Reserved
+        iconDir[2] = 1; // Type: 1 = ICO
+        iconDir[3] = 0; // Type
+        iconDir[4] = canvases.length; // Count of images
+        iconDir[5] = 0; // Count of images
+        
+        let offset = 6 + (16 * canvases.length); // Header size + directory size
+        const imageDataArray = [];
+        
+        // 为每个尺寸创建目录项和图像数据
+        canvases.forEach((item, index) => {
+          const { size, canvas } = item;
+          
+          // 获取PNG数据
+          const pngData = getCanvasPngData(canvas);
+          imageDataArray.push(pngData);
+          
+          // 目录项
+          const entryOffset = index * 16;
+          iconDirEntry[entryOffset] = size; // Width
+          iconDirEntry[entryOffset + 1] = size; // Height
+          iconDirEntry[entryOffset + 2] = 0; // Color palette
+          iconDirEntry[entryOffset + 3] = 0; // Reserved
+          iconDirEntry[entryOffset + 4] = 1; // Color planes
+          iconDirEntry[entryOffset + 5] = 0; // Color planes
+          iconDirEntry[entryOffset + 6] = 32; // Bits per pixel
+          iconDirEntry[entryOffset + 7] = 0; // Bits per pixel
+          
+          // 图像数据大小
+          const size32 = new Uint32Array(1);
+          size32[0] = pngData.length;
+          const size8 = new Uint8Array(size32.buffer);
+          iconDirEntry[entryOffset + 8] = size8[0];
+          iconDirEntry[entryOffset + 9] = size8[1];
+          iconDirEntry[entryOffset + 10] = size8[2];
+          iconDirEntry[entryOffset + 11] = size8[3];
+          
+          // 图像数据偏移
+          const offset32 = new Uint32Array(1);
+          offset32[0] = offset;
+          const offset8 = new Uint8Array(offset32.buffer);
+          iconDirEntry[entryOffset + 12] = offset8[0];
+          iconDirEntry[entryOffset + 13] = offset8[1];
+          iconDirEntry[entryOffset + 14] = offset8[2];
+          iconDirEntry[entryOffset + 15] = offset8[3];
+          
+          offset += pngData.length;
+        });
+        
+        // 合并所有数据
+        const totalSize = 6 + (16 * canvases.length) + imageDataArray.reduce((acc, data) => acc + data.length, 0);
+        const icoData = new Uint8Array(totalSize);
+        
+        // 复制头部和目录
+        icoData.set(iconDir, 0);
+        icoData.set(iconDirEntry, 6);
+        
+        // 复制图像数据
+        let dataOffset = 6 + (16 * canvases.length);
+        imageDataArray.forEach(data => {
+          icoData.set(data, dataOffset);
+          dataOffset += data.length;
+        });
+        
+        // 创建下载链接
+        const blob = new Blob([icoData], { type: 'image/x-icon' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName}.ico`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+      }
+      
+      // 获取Canvas的PNG数据
+      function getCanvasPngData(canvas) {
+        // 将Canvas转换为PNG
+        const pngUrl = canvas.toDataURL('image/png');
+        
+        // 解码base64
+        const byteString = atob(pngUrl.split(',')[1]);
+        
+        // 转换为Uint8Array
+        const ia = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        
+        return ia;
+      }
+    });
+  </script>
+</body>
+</html>
